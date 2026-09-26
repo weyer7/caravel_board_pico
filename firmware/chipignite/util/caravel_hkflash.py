@@ -1,51 +1,40 @@
 #!/usr/bin/env python3
 
+import sys
+import os
 import time
-import sys, os
 import binascii
-from caravel.defs import *
-from caravel.hk import HKSpi
-
+from caravel.hk import HKSpi, CARAVEL_PASSTHRU, CMD_PROGRAM_PAGE, CMD_READ_LO_SPEED
 
 if len(sys.argv) < 2:
-   print("Usage: caravel_hkflash.py <file>")
-   sys.exit()
+    print("Usage: caravel_hkflash.py <file>")
+    sys.exit(1)
 
 file_path = sys.argv[1]
-
 if not os.path.isfile(file_path):
-   print("File not found.")
-   sys.exit()
+    print("File not found.")
+    sys.exit(1)
 
-
-
-with HKSpi(uart_enable_mode=HKSpi.UART_DISABLE) as hk:
-    print(" ")
-    print ("Asserting hardware reset")
+with HKSpi() as hk:
+    print("Asserting hardware reset")
     hk.hard_reset_assert()
     time.sleep(0.1)
 
-    print("Powering down Caravel core")
-    hk.power_down_1V8()
-    time.sleep(5)
-    hk.power_up_1V8()
-    print("Caravel core powered up")
+    print("Power cycling Caravel core (monitoring ADC rail discharge)...")
+    # hk.power_cycle_caravel()
+    print(f"Rails restored - 3V3: {hk.read_voltage_3v3():.2f}V, 1V8: {hk.read_voltage_1v8():.2f}V")
     time.sleep(0.1)
 
     hk.identify()
     hk.cpu_reset_hold()
+    time.sleep(0.2)
 
-    time.sleep(0.5)
-    hk.led1.toggle()
-
-    print(" ")
-    print("Resetting Flash...")
+    print("\nResetting Flash...")
     hk.flash_reset()
     hk.flash_identify()
     hk.flash_erase()
 
-
-
+    # --- Flashing Loop ---
     buf = bytearray()
     addr = 0
     nbytes = 0
@@ -55,159 +44,86 @@ with HKSpi(uart_enable_mode=HKSpi.UART_DISABLE) as hk:
         x = f.readline()
         while x != '':
             if x[0] == '@':
-                addr = int(x[1:],16)
-                print('setting address to {}'.format(hex(addr)))
+                addr = int(x[1:], 16)
+                print(f"Setting address to {hex(addr)}")
             else:
-                # print(x)
-                values = bytearray.fromhex(x[0:len(x)-1])
+                values = bytearray.fromhex(x.strip())
                 buf[nbytes:nbytes] = values
                 nbytes += len(values)
-                # print(binascii.hexlify(values))
 
             x = f.readline()
 
             if nbytes >= 256 or (x != '' and x[0] == '@' and nbytes > 0):
                 total_bytes += nbytes
-                # print('\n----------------------\n')
-                # print(binascii.hexlify(buf))
-                # print("\ntotal_bytes = {}".format(total_bytes))
-
                 hk.flash_write_enable()
-                wcmd = bytearray((CARAVEL_PASSTHRU, CMD_PROGRAM_PAGE,(addr >> 16) & 0xff, (addr >> 8) & 0xff, addr & 0xff))
-                # wcmd = bytearray((CARAVEL_PASSTHRU, CMD_WRITE_ENABLE, CMD_PROGRAM_PAGE,(addr >> 16) & 0xff, (addr >> 8) & 0xff, addr & 0xff))
-                # print(binascii.hexlify(wcmd))
-                # wcmd.extend(buf[0:255])
-                wcmd.extend(buf)
+                
+                wcmd = bytearray((CARAVEL_PASSTHRU, CMD_PROGRAM_PAGE, (addr >> 16) & 0xFF, (addr >> 8) & 0xFF, addr & 0xFF))
+                wcmd.extend(buf[0:256])
                 hk.slave.exchange(wcmd)
-                while (hk.is_busy()):
-                    time.sleep(0.000001)
+                
+                while hk.is_busy():
+                    time.sleep(0.00001)
 
-                print("addr {}: flash page write successful".format(hex(addr)))
+                print(f"addr {hex(addr)}: flash page write successful")
 
                 if nbytes > 256:
-                    buf = buf[255:]
+                    buf = buf[256:]
                     addr += 256
                     nbytes -= 256
-                    print("*** over 256 hit")
                 else:
                     buf = bytearray()
                     addr += 256
-                    nbytes =0
+                    nbytes = 0
 
         if nbytes > 0:
             total_bytes += nbytes
-            # print('\n----------------------\n')
-            # print(binascii.hexlify(buf))
-            # print("\nnbytes = {}".format(nbytes))
-
             hk.flash_write_enable()
-            wcmd = bytearray((CARAVEL_PASSTHRU, CMD_PROGRAM_PAGE, (addr >> 16) & 0xff, (addr >> 8) & 0xff, addr & 0xff))
-            # wcmd = bytearray((CARAVEL_PASSTHRU, CMD_WRITE_ENABLE, CMD_PROGRAM_PAGE, (addr >> 16) & 0xff, (addr >> 8) & 0xff, addr & 0xff))
+            wcmd = bytearray((CARAVEL_PASSTHRU, CMD_PROGRAM_PAGE, (addr >> 16) & 0xFF, (addr >> 8) & 0xFF, addr & 0xFF))
             wcmd.extend(buf)
             hk.slave.exchange(wcmd)
-            while (hk.is_busy()):
-                time.sleep(0.1)
+            while hk.is_busy():
+                time.sleep(0.001)
+            print(f"addr {hex(addr)}: flash page write successful")
 
-            print("addr {}: flash page write successful".format(hex(addr)))
+    print(f"\nTotal bytes written: {total_bytes}")
 
-    print("\ntotal_bytes = {}".format(total_bytes))
-
-    hk.print_long_status()
-
-    print("************************************")
-    print("verifying...")
-    print("************************************")
-
-    buf = bytearray()
+    # --- Verification Loop ---
+    print("\nVerifying...")
     addr = 0
     nbytes = 0
-    total_bytes = 0
-
-    while (hk.is_busy()):
-        time.sleep(0.5)
-
-    # slave.write([CARAVEL_REG_WRITE, 0x0b, 0x01])
-    # slave.write([CARAVEL_REG_WRITE, 0x0b, 0x00])
-
-    hk.print_long_status()
 
     with open(file_path, mode='r') as f:
         x = f.readline()
         while x != '':
             if x[0] == '@':
-                addr = int(x[1:],16)
-                print('setting address to {}'.format(hex(addr)))
+                addr = int(x[1:], 16)
             else:
-                # print(x)
-                values = bytearray.fromhex(x[0:len(x)-1])
+                values = bytearray.fromhex(x.strip())
                 buf[nbytes:nbytes] = values
                 nbytes += len(values)
-                # print(binascii.hexlify(values))
 
             x = f.readline()
 
             if nbytes >= 256 or (x != '' and x[0] == '@' and nbytes > 0):
-
-                total_bytes += nbytes
-                # print('\n----------------------\n')
-                # print(binascii.hexlify(buf))
-                # print("\ntotal_bytes = {}".format(total_bytes))
-
-                read_cmd = bytearray((CARAVEL_PASSTHRU, CMD_READ_LO_SPEED,(addr >> 16) & 0xff, (addr >> 8) & 0xff, addr & 0xff))
-                # print(binascii.hexlify(read_cmd))
+                read_cmd = bytearray((CARAVEL_PASSTHRU, CMD_READ_LO_SPEED, (addr >> 16) & 0xFF, (addr >> 8) & 0xFF, addr & 0xFF))
                 buf2 = hk.slave.exchange(read_cmd, nbytes)
-                if buf == buf2:
-                    print("addr {}: read compare successful".format(hex(addr)))
+                
+                if buf[:nbytes] == buf2:
+                    print(f"addr {hex(addr)}: read compare successful")
                 else:
-                    print("addr {}: *** read compare FAILED ***".format(hex(addr)))
-                    print(binascii.hexlify(buf))
-                    print("<----->")
-                    print(binascii.hexlify(buf2))
+                    print(f"addr {hex(addr)}: *** READ COMPARE FAILED ***")
 
                 if nbytes > 256:
-                    buf = buf[255:]
+                    buf = buf[256:]
                     addr += 256
                     nbytes -= 256
-                    print("*** over 256 hit")
                 else:
                     buf = bytearray()
                     addr += 256
-                    nbytes =0
+                    nbytes = 0
 
-        if nbytes > 0:
-            total_bytes += nbytes
-            # print('\n----------------------\n')
-            # print(binascii.hexlify(buf))
-            # print("\nnbytes = {}".format(nbytes))
-
-            read_cmd = bytearray((CARAVEL_PASSTHRU, CMD_READ_LO_SPEED, (addr >> 16) & 0xff, (addr >> 8) & 0xff, addr & 0xff))
-            # print(binascii.hexlify(read_cmd))
-            buf2 = hk.slave.exchange(read_cmd, nbytes)
-            if buf == buf2:
-                print("addr {}: read compare successful".format(hex(addr)))
-            else:
-                print("addr {}: *** read compare FAILED ***".format(hex(addr)))
-                print(binascii.hexlify(buf))
-                print("<----->")
-                print(binascii.hexlify(buf2))
-
-    print("\ntotal_bytes = {}".format(total_bytes))
-
-    print("pll_trim = {}\n".format(binascii.hexlify(hk.read_dll_trim())))
-
-    # print("Setting trim values...\n")
-    # slave.write([CARAVEL_REG_WRITE, 0x04, 0x7f])
-
-    # pll_trim = slave.exchange([CARAVEL_REG_READ, 0x04],1)
-    # print("pll_trim = {}\n".format(binascii.hexlify(pll_trim)))
-
+    print("\nReleasing reset and booting Caravel...")
     hk.cpu_reset_release()
-
-    print(" ")
-    print ("Releasing hardware reset")
     hk.hard_reset_deassert()
-
-    hk.led1.toggle()
-    time.sleep(0.3)
-    hk.led1.toggle()
-
+    hk.release_pins()
+    print("Done!")
