@@ -33,6 +33,7 @@ enum Cmd {
     CMD_SET_LED2       = 0x07,
     CMD_POWER_CYCLE    = 0x08,
     CMD_RELEASE_PINS   = 0x09,
+    CMD_CLAIM_PINS     = 0x0A,
 };
 
 static inline void gpio_init_out_val(uint pin, bool initial_val) {
@@ -74,6 +75,20 @@ static void release_caravel_pins(void)
     gpio_set_function(PIN_UART_RXD, GPIO_FUNC_SIO);
     gpio_set_dir(PIN_UART_RXD, GPIO_OUT);
     gpio_put(PIN_UART_RXD, 0);
+}
+
+//claim caravel pins
+static void claim_caravel_pins(void)
+{
+    // Reinitialize SPI1.
+    spi_init(spi1, 1000 * 1000);
+
+    gpio_set_function(PIN_SPI_SCK, GPIO_FUNC_SPI);
+    gpio_set_function(PIN_SPI_SI,  GPIO_FUNC_SPI);
+    gpio_set_function(PIN_SPI_SO,  GPIO_FUNC_SPI);
+
+    // CS is software controlled.
+    gpio_init_out_val(PIN_SPI_CS, 1);
 }
 
 int main() {
@@ -172,6 +187,11 @@ int main() {
 
             case CMD_RELEASE_PINS:
                 release_caravel_pins();
+                putchar_raw(0x1); //Ack
+                break;
+
+            case CMD_CLAIM_PINS:
+                claim_caravel_pins();
                 putchar_raw(0x1); //Ack
                 break;
                 

@@ -37,6 +37,7 @@ class HKSpi:
     CMD_SET_LED2      = 0x07
     CMD_POWER_CYCLE   = 0x08
     CMD_RELEASE_PINS  = 0x09
+    CMD_CLAIM_PINS    = 0x0A
 
     def __init__(self, port=None, **_kwargs):
         if port is None:
@@ -155,7 +156,7 @@ class HKSpi:
         self.slave_exchange([CARAVEL_PASSTHRU, CMD_ERASE_CHIP])
         if wait:
             while self.is_busy():
-                time.sleep(0.3)
+                time.sleep(0.5)
                 if not quiet: print('.', end='', flush=True)
                 self.led1.toggle()
             if not quiet: print("\ndone")
@@ -166,6 +167,13 @@ class HKSpi:
 
         if ack != b'\x01':
             raise RuntimeError(f"Failed to release Caravel pins (ACK={ack.hex()})")
+
+    def claim_pins(self):
+        self.ser.write(bytes([self.CMD_CLAIM_PINS]))
+        ack = self.ser.read(1)
+
+        if ack != b'\x01':
+            raise RuntimeError(f"Failed to claim Caravel pins (ACK={ack.hex()})")
 
     def close(self):
         self.ser.close()

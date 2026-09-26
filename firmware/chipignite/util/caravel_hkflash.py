@@ -16,6 +16,7 @@ if not os.path.isfile(file_path):
     sys.exit(1)
 
 with HKSpi() as hk:
+    hk.claim_pins()
     print("Asserting hardware reset")
     hk.hard_reset_assert()
     time.sleep(0.1)
