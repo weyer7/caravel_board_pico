@@ -5,11 +5,15 @@
 //they should make this in pico_teamXX.c
 // #define TEAM_FIRMWARE
 
-int main() {
 #ifdef TEAM_FIRMWARE
-    teamXX_main();
-#else
-    hkflash_main();
-#endif
-    return 0;
+#include pico_teamXX.h
+int main(void)
+{
+    return teamXX_main();
 }
+#else
+int main(void)
+{
+    return hkflash_main();
+}
+#endif

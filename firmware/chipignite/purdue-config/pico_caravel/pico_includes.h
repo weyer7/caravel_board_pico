@@ -55,6 +55,7 @@ enum Cmd {
     CMD_POWER_CYCLE    = 0x08,
     CMD_RELEASE_PINS   = 0x09,
     CMD_CLAIM_PINS     = 0x0A,
+    CMD_REBOOT_BOOTSEL = 0x0B,
 };
 
 static inline void gpio_init_out_val(uint pin, bool initial_val) {

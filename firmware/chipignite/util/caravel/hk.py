@@ -28,16 +28,17 @@ class PinProxy:
         self._toggle()
 
 class HKSpi:
-    CMD_SPI_EXCHANGE  = 0x01
-    CMD_SET_RSTB      = 0x02
-    CMD_SET_PWR_EN    = 0x03
-    CMD_READ_ADC_3V3  = 0x04
-    CMD_READ_ADC_1V8  = 0x05
-    CMD_SET_LED1      = 0x06
-    CMD_SET_LED2      = 0x07
-    CMD_POWER_CYCLE   = 0x08
-    CMD_RELEASE_PINS  = 0x09
-    CMD_CLAIM_PINS    = 0x0A
+    CMD_SPI_EXCHANGE   = 0x01
+    CMD_SET_RSTB       = 0x02
+    CMD_SET_PWR_EN     = 0x03
+    CMD_READ_ADC_3V3   = 0x04
+    CMD_READ_ADC_1V8   = 0x05
+    CMD_SET_LED1       = 0x06
+    CMD_SET_LED2       = 0x07
+    CMD_POWER_CYCLE    = 0x08
+    CMD_RELEASE_PINS   = 0x09
+    CMD_CLAIM_PINS     = 0x0A
+    CMD_REBOOT_BOOTSEL = 0x0B
 
     def __init__(self, port=None, **_kwargs):
         if port is None:
@@ -174,6 +175,11 @@ class HKSpi:
 
         if ack != b'\x01':
             raise RuntimeError(f"Failed to claim Caravel pins (ACK={ack.hex()})")
+
+    def reboot_bootsel(self):
+        self.ser.write(bytes([self.CMD_REBOOT_BOOTSEL]))
+        self.ser.close()
+        #don't wait for ack
 
     def close(self):
         self.ser.close()

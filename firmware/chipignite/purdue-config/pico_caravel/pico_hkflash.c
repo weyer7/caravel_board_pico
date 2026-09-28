@@ -104,7 +104,12 @@ int hkflash_main() {
                 claim_caravel_pins();
                 putchar_raw(0x1); //Ack
                 break;
-                
+            
+            case CMD_REBOOT_BOOTSEL:
+                //never returns
+                reset_usb_boot(0, 0); //TODO
+                break;
+
             default:
                 break;
         }

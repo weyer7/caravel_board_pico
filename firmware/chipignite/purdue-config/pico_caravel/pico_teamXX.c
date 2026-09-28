@@ -11,5 +11,8 @@ int teamXX_main() {
 
 
     //YOUR CODE ABOVE
-    for (;;) {};
+    while (true) {
+        tight_loop_contents();
+    }
+    return 0;
 }

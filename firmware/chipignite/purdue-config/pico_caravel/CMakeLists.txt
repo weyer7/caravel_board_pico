@@ -33,23 +33,24 @@ project(pico_caravel C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
+
+
+# Bridge Firmware
+
 # Add executable. Default name is the project name, version 0.1
-add_executable(pico_caravel
-        pico_caravel.c
+add_executable(pico_hkflash
         pico_hkflash.c
-        pico_teamXX.c
-        pico_includes.h
     )
 
-pico_set_program_name(pico_caravel "pico_caravel")
-pico_set_program_version(pico_caravel "0.1")
+pico_set_program_name(pico_hkflash "pico_hkflash")
+pico_set_program_version(pico_hkflash "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(pico_caravel 0)
-pico_enable_stdio_usb(pico_caravel 1)
+pico_enable_stdio_uart(pico_hkflash 0)
+pico_enable_stdio_usb(pico_hkflash 1)
 
 # Add the standard library to the build
-target_link_libraries(pico_caravel
+target_link_libraries(pico_hkflash
         pico_stdlib
         hardware_spi
         hardware_adc
@@ -57,9 +58,39 @@ target_link_libraries(pico_caravel
     )
 
 # Add the standard include files to the build
-target_include_directories(pico_caravel PRIVATE
+target_include_directories(pico_hkflash PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
 )
 
-pico_add_extra_outputs(pico_caravel)
+pico_add_extra_outputs(pico_hkflash)
 
+
+
+# Team Firmware
+
+# Add executable. Default name is the project name, version 0.1
+add_executable(pico_teamXX
+        pico_teamXX.c
+    )
+
+pico_set_program_name(pico_teamXX "pico_teamXX")
+pico_set_program_version(pico_teamXX "0.1")
+
+# Modify the below lines to enable/disable output over UART/USB
+pico_enable_stdio_uart(pico_teamXX 0)
+pico_enable_stdio_usb(pico_teamXX 1)
+
+# Add the standard library to the build
+target_link_libraries(pico_teamXX
+        pico_stdlib
+        hardware_spi
+        hardware_adc
+        hardware_uart
+    )
+
+# Add the standard include files to the build
+target_include_directories(pico_teamXX PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}
+)
+
+pico_add_extra_outputs(pico_teamXX)

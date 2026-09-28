@@ -12,6 +12,16 @@ ARCH=rv32i_zicsr
 
 PATTERN = load
 
+PICO_DIR := pico_caravel
+PICO_BUILD := $(PICO_DIR)/PICO_BUILD
+
+PICO_HKFLASH_UF2 := $(PICO_BUILD)/pico_hkflash/pico_hkflash.uf2
+PICO_TEAM_UF2 := $(PICO_BUILD)/pico_teamXX/pico_teamXX.uf2
+
+
+# =================================
+# Caravel Firmware
+# =================================
 hex: ${PATTERN:=.hex}
 
 %.elf: %.c ../sections.lds ../crt0_vex.S
@@ -38,6 +48,36 @@ flash2: load.hex
 show_projectid:
 	python3 ../util/caravel_projectid.py
 
+# =================================
+# Pico Bridge Firmware
+# =================================
+
+pico-configure:
+	cmake -S $(PICO_DIR) -b $(PICO_BUILD) -DPICO_BOARD=pico2 //TODO
+
+pico-hkflash: pico-configure
+	cmake --build $(PICO_BUILD) --target pico_hkflash -j
+
+pico-flash-hkflash: pico-hkflash
+	python3 util/pico_flash.py flash $(PICO_HKFLASH_UF2)
+
+clean-flash: pico-flash-pico_hkflash
+	python3 util/pico_flash.py wait $(MAKE) flash
+
+# =================================
+# Pico Team Firmware
+# =================================
+
+pico-team: pico-configure
+	cmake --build $(PICO_BUILD) --target pico_teamXX -j
+
+flash-team: clean-flash pico-team
+	python3 util/pico_flash.py flash $(PICO_TEAM_UF2)
+
+flash-pico: pico-team
+	python3 util/pico_flash.py flash $(PICO_TEAM_UF2)
+
+	
 # ---- Clean ----
 
 clean:
