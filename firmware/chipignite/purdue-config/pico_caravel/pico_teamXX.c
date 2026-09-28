@@ -6,7 +6,7 @@
 
 //ADD HELPERS ABOVE
 
-int teamXX_main() {
+int main() {
     //YOUR CODE BELOW
 
 

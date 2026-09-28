@@ -1,7 +1,7 @@
 //pin mappings + commands
 #include "pico_includes.h"
 
-int hkflash_main() {
+int main() {
     stdio_init_all(); // Init USB CDC Serial
 
     // Initialize Power & Reset Lines
@@ -107,7 +107,7 @@ int hkflash_main() {
             
             case CMD_REBOOT_BOOTSEL:
                 //never returns
-                reset_usb_boot(0, 0); //TODO
+                // reset_usb_boot(0, 0); //TODO
                 break;
 
             default:

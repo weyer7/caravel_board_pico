@@ -46,8 +46,8 @@ class HKSpi:
                 if "2e8a" in p.hwid.lower(): # Raspberry Pi VID
                     port = p.device
                     break
-            if port is None:
-                raise RuntimeError("Error: RP2040 board not found on USB bus!")
+        if port is None:
+            raise RuntimeError("Error: Raspberry Pi Pico USB bridge not found on USB bus!")
 
         self.ser = serial.Serial(port, baudrate=115200, timeout=2.0)
         time.sleep(0.05)

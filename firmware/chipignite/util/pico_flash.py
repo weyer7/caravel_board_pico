@@ -5,6 +5,39 @@ import subprocess
 import sys
 import time
 
+import argparse
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+import serial.tools.list_ports
+
+
+def find_picotool():
+    # First prefer picotool already available in PATH.
+    picotool = shutil.which("picotool")
+    if picotool:
+        return picotool
+
+    # Pico VS Code extension / SDK locations.
+    candidates = [
+        Path.home() / ".pico-sdk" / "tools" / "picotool" / "picotool",
+        Path.home() / ".pico-sdk" / "picotool" / "2.3.1" / "picotool" / "picotool",
+    ]
+
+    for candidate in candidates:
+        if candidate.is_file() and candidate.stat().st_mode & 0o111:
+            return str(candidate)
+
+    raise RuntimeError(
+        "picotool was not found. Add picotool to PATH or install/build "
+        "picotool from the Raspberry Pi Pico SDK."
+    )
+
+
+PICOTOOL = find_picotool()
 
 def run(cmd):
     print("+", " ".join(str(x) for x in cmd), flush=True)
@@ -24,38 +57,21 @@ def flash(uf2):
     -f tells picotool to force a compatible running application
     into BOOTSEL first.
     """
-
-    run([
-        "picotool",
-        "load",
-        "-f",
-        "-vx",
-        uf2,
-    ])
+    run([PICOTOOL, "load", "-f", "-vx", uf2])
 
 
 def wait_for_usb(timeout=10.0):
-    """
-    Wait until picotool can see a Pico again.
-    """
-
     deadline = time.monotonic() + timeout
 
     while time.monotonic() < deadline:
-        result = subprocess.run(
-            ["picotool", "info"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-
-        if result.returncode == 0:
-            return
+        for port in serial.tools.list_ports.comports():
+            if port.vid == 0x2E8A and port.pid == 0x0009:
+                print(f"Found Pico bridge at {port.device}")
+                return
 
         time.sleep(0.1)
 
-    raise RuntimeError(
-        "Timed out waiting for Pico USB device"
-    )
+    raise RuntimeError("Timed out waiting for Pico USB bridge")
 
 
 def main():
