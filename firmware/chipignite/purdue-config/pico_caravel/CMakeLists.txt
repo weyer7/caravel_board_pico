@@ -34,8 +34,12 @@ project(pico_caravel C CXX ASM)
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
-
-add_executable(pico_caravel pico_caravel.c )
+add_executable(pico_caravel
+        pico_caravel.c
+        pico_hkflash.c
+        pico_teamXX.c
+        pico_includes.h
+    )
 
 pico_set_program_name(pico_caravel "pico_caravel")
 pico_set_program_version(pico_caravel "0.1")
