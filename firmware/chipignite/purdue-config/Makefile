@@ -16,7 +16,7 @@ PICO_DIR := pico_caravel
 PICO_BUILD := $(PICO_DIR)/build
 
 PICO_HKFLASH_UF2 := $(PICO_BUILD)/pico_hkflash.uf2
-PICO_TEAM_UF2 := $(PICO_BUILD)/pico_teamXX.uf2
+PICO_TEAM_UF2 := $(PICO_BUILD)/pico_team.uf2
 
 PICOTOOL := ~/.pico-sdk/picotool/2.3.1/picotool/picotool
 
@@ -72,7 +72,7 @@ clean-flash: pico-flash-hkflash
 # =================================
 
 pico-team: pico-configure
-	cmake --build $(PICO_BUILD) --target pico_teamXX -j
+	cmake --build $(PICO_BUILD) --target pico_team -j
 
 flash-team: clean-flash pico-team
 	python3 ../util/pico_flash.py flash $(PICO_TEAM_UF2)

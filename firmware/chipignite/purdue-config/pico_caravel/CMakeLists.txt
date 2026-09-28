@@ -69,19 +69,19 @@ pico_add_extra_outputs(pico_hkflash)
 # Team Firmware
 
 # Add executable. Default name is the project name, version 0.1
-add_executable(pico_teamXX
-        pico_teamXX.c
+add_executable(pico_team
+        pico_team.c
     )
 
-pico_set_program_name(pico_teamXX "pico_teamXX")
-pico_set_program_version(pico_teamXX "0.1")
+pico_set_program_name(pico_team "pico_team")
+pico_set_program_version(pico_team "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(pico_teamXX 0)
-pico_enable_stdio_usb(pico_teamXX 1)
+pico_enable_stdio_uart(pico_team 0)
+pico_enable_stdio_usb(pico_team 1)
 
 # Add the standard library to the build
-target_link_libraries(pico_teamXX
+target_link_libraries(pico_team
         pico_stdlib
         hardware_spi
         hardware_adc
@@ -89,8 +89,8 @@ target_link_libraries(pico_teamXX
     )
 
 # Add the standard include files to the build
-target_include_directories(pico_teamXX PRIVATE
+target_include_directories(pico_team PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
 )
 
-pico_add_extra_outputs(pico_teamXX)
+pico_add_extra_outputs(pico_team)
