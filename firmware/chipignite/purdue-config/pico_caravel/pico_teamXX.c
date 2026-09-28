@@ -7,6 +7,7 @@
 //ADD HELPERS ABOVE
 
 int main() {
+    stdio_init_all(); // Init USB CDC Serial
     //YOUR CODE BELOW
 
 
