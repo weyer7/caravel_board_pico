@@ -55,7 +55,7 @@ show_projectid:
 # =================================
 
 pico-configure:
-	cmake -S $(PICO_DIR) -B $(PICO_BUILD) -DPICO_BOARD=pico2
+	cmake -S $(PICO_DIR) -B $(PICO_BUILD) -DPICO_BOARD=pico -DPICO_STDIO_USB=1 -DPICO_STDIO_UART=0
 
 pico-hkflash: pico-configure
 	cmake --build $(PICO_BUILD) --target pico_hkflash -j

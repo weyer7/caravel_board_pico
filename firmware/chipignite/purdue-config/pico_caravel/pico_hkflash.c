@@ -116,3 +116,15 @@ int main() {
     }
     return 1;
 }
+
+// #include "pico_includes.h"
+
+// int main(void)
+// {
+//     stdio_init_all();
+
+//     while (true) {
+//         printf("hello from RP2040\n");
+//         sleep_ms(1000);
+//     }
+// }
