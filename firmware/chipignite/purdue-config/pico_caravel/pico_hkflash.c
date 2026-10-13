@@ -91,6 +91,7 @@ int main() {
                 }
                 sleep_ms(50); // Extra discharge settling margin
                 gpio_put(PIN_CARAVEL_PWR, 1);
+                sleep_ms(50); //wait to turn back on
                 putchar_raw(0x01); // ACK when complete
                 break;
             }

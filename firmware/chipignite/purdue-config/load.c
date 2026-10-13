@@ -37,10 +37,15 @@ void configure_io()
     // You may need to hold reset while powering up the board and initiating flash to keep the process
     // configuring these IO from their default values.
 
+    // reg_mprj_io_1 = GPIO_MODE_MGMT_STD_OUTPUT;
+    // reg_mprj_io_2 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
+    // reg_mprj_io_3 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
+    // reg_mprj_io_4 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
+
     reg_mprj_io_1 = GPIO_MODE_MGMT_STD_OUTPUT;
-    reg_mprj_io_2 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_3 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_4 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
+    reg_mprj_io_2 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_3 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_4 = GPIO_MODE_MGMT_STD_OUTPUT;
 
     // -------------------------------------------
 

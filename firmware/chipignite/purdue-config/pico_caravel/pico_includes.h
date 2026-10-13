@@ -14,6 +14,8 @@
 #define PIN_RSTB         8   // Active Low Reset (~RESETB)
 #define PIN_LED1         10  // Active Low LED 1
 #define PIN_LED2         11  // Active Low LED 2
+#define PIN_LED_TX       18
+#define PIN_LED_RX       19
 
 #define PIN_SPI_SI       12  // MOSI -> spi1 TX
 #define PIN_SPI_CS       13  // CSn  -> spi1 CSn (Software controlled)
@@ -75,10 +77,9 @@ uint16_t read_adc_mv(uint input_num) {
 //tri-state pico pins driving caravel I/Os
 static void release_caravel_pins(void)
 {
-    // Stop SPI peripheral from driving its pins.
     spi_deinit(spi1);
 
-    // Return SPI pins to GPIO control, then tri-state them.
+    // SPI
     gpio_set_function(PIN_SPI_SCK, GPIO_FUNC_SIO);
     gpio_set_function(PIN_SPI_SI,  GPIO_FUNC_SIO);
     gpio_set_function(PIN_SPI_SO,  GPIO_FUNC_SIO);
@@ -86,17 +87,23 @@ static void release_caravel_pins(void)
 
     gpio_set_dir(PIN_SPI_SCK, GPIO_IN);
     gpio_set_dir(PIN_SPI_SI,  GPIO_IN);
-    gpio_set_dir(PIN_SPI_SO,  GPIO_IN);
+    gpio_set_dir(PIN_SPI_SO, GPIO_IN);
     gpio_set_dir(PIN_SPI_CS, GPIO_IN);
 
-    // Release UART TX as well.
+    gpio_disable_pulls(PIN_SPI_SCK);
+    gpio_disable_pulls(PIN_SPI_SI);
+    gpio_disable_pulls(PIN_SPI_SO);
+    gpio_disable_pulls(PIN_SPI_CS);
+
+    // UART TX
     gpio_set_function(PIN_UART_TXD, GPIO_FUNC_SIO);
     gpio_set_dir(PIN_UART_TXD, GPIO_IN);
+    gpio_disable_pulls(PIN_UART_TXD);
 
-    // UART RX intentionally remains driven as an output.
+    // UART RX
     gpio_set_function(PIN_UART_RXD, GPIO_FUNC_SIO);
-    gpio_set_dir(PIN_UART_RXD, GPIO_OUT);
-    gpio_put(PIN_UART_RXD, 0);
+    gpio_set_dir(PIN_UART_RXD, GPIO_IN);
+    gpio_disable_pulls(PIN_UART_RXD);
 }
 
 //claim caravel pins
