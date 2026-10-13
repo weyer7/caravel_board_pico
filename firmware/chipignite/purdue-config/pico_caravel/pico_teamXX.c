@@ -37,6 +37,14 @@ static void uart_bridge_init(void) {
     gpio_set_dir(PIN_LED_RX, GPIO_OUT);
     gpio_put(PIN_LED_RX, 1);
 
+    gpio_init(PIN_LED1);
+    gpio_set_dir(PIN_LED1, GPIO_OUT);
+    gpio_put(PIN_LED1, 1);
+
+    gpio_init(PIN_LED2);
+    gpio_set_dir(PIN_LED2, GPIO_OUT);
+    gpio_put(PIN_LED2, 1);
+
     tx_phase_expiry = get_absolute_time();
     tx_activity_expiry = get_absolute_time();
     rx_phase_expiry = get_absolute_time();
